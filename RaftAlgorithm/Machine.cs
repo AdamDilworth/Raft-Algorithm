@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 public class Machine
 {
     private CancellationTokenSource cts;
+    private ManualResetEventSlim pauseEvent;
     private double time;
     private int id;
 
@@ -12,6 +13,8 @@ public class Machine
     public Machine(int id)
     {
         cts = new CancellationTokenSource();
+        // default state "true" is not paused
+        pauseEvent = new ManualResetEventSlim(true);
         time = 0;
         this.id = id;
     }
@@ -21,7 +24,7 @@ public class Machine
     {
         try
         {
-            await Task.Run(() => clock(cts.Token), cts.Token);
+            await Task.Run(() => clock(), cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -35,11 +38,24 @@ public class Machine
         cts.Cancel();
     }
 
-    // Increment clock every .1 second and print
-    private async Task clock(CancellationToken token)
+    // Pause thread
+    public void pauseMachine()
     {
-        while(!token.IsCancellationRequested)
+        pauseEvent.Reset();
+    }
+
+    // Resume thread
+    public void resumeMachine()
+    {
+        pauseEvent.Set();
+    }
+
+    // Increment clock every .1 second and print
+    private async Task clock()
+    {
+        while(!cts.Token.IsCancellationRequested)
         {
+            pauseEvent.Wait();
             Console.WriteLine("Thread: " + id + " Time: " + time);
             await Task.Delay(100);
             time += 0.1;

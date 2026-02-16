@@ -1,22 +1,27 @@
 ﻿// Main
 
-// create test machine 1
+// create and start 3 test machines
 var machine1 = new Machine(1);
-System.Console.WriteLine("Made machine1");
-_ = machine1.startMachine();
-
-// create test machine 2
 var machine2 = new Machine(2);
-System.Console.WriteLine("Made machine2");
-_ = machine2.startMachine();
-
-// create test machine 3
 var machine3 = new Machine(3);
-System.Console.WriteLine("Made machine3");
+_ = machine1.startMachine();
+_ = machine2.startMachine();
 _ = machine3.startMachine();
 
-// Run machines for 3 more seconds
-await Task.Delay(3000);
+// Run machines for 1 second
+await Task.Delay(1000);
+
+// Pause machine 2
+machine2.pauseMachine();
+
+// Run machines for 1 second
+await Task.Delay(1000);
+
+// Resume machine 2
+machine2.resumeMachine();
+
+// Run machines for 2 more seconds
+await Task.Delay(2000);
 
 // Cancel Machine
 machine1.stopMachine();
