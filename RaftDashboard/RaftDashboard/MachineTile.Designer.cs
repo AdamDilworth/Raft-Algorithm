@@ -34,6 +34,7 @@
             btnInterrupt = new Button();
             btnCrash = new Button();
             btnViewMessage = new Button();
+            btnResume = new Button();
             SuspendLayout();
             // 
             // lblMachineID
@@ -62,6 +63,7 @@
             btnSendMessage.TabIndex = 2;
             btnSendMessage.Text = "Send Message";
             btnSendMessage.UseVisualStyleBackColor = true;
+            btnSendMessage.Click += btnSendMessage_Click;
             // 
             // btnInterrupt
             // 
@@ -91,11 +93,23 @@
             btnViewMessage.TabIndex = 5;
             btnViewMessage.Text = "View Message";
             btnViewMessage.UseVisualStyleBackColor = true;
+            btnViewMessage.Click += btnViewMessage_Click;
+            // 
+            // btnResume
+            // 
+            btnResume.Location = new Point(400, 87);
+            btnResume.Name = "btnResume";
+            btnResume.Size = new Size(94, 29);
+            btnResume.TabIndex = 6;
+            btnResume.Text = "Resume";
+            btnResume.UseVisualStyleBackColor = true;
+            btnResume.Click += btnResume_Click;
             // 
             // MachineTile
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(btnResume);
             Controls.Add(btnViewMessage);
             Controls.Add(btnCrash);
             Controls.Add(btnInterrupt);
@@ -116,5 +130,6 @@
         private Button btnInterrupt;
         private Button btnCrash;
         private Button btnViewMessage;
+        private Button btnResume;
     }
 }
