@@ -20,7 +20,7 @@ namespace RaftDashboard
             machines.Clear();
             tasks.Clear();
             tokens.Clear();
-            flowLayoutPanel1.Controls.Clear();
+            flpMachineInfo.Controls.Clear();
 
             for (int i = 0; i < count; i++)
             {
@@ -31,7 +31,7 @@ namespace RaftDashboard
                 var machine = new Machine(cts) { Id = i };
                 var tile = new MachineTile { MachineID = i };
                 tile.UpdateID();
-                flowLayoutPanel1.Controls.Add(tile);
+                flpMachineInfo.Controls.Add(tile);
 
                 // Update display after machine updates its time
                 machine.OnTick += () =>
