@@ -12,21 +12,39 @@ namespace RaftDashboard
 {
     public partial class MachineTile : UserControl
     {
-        public MachineTile()
+        public MachineTile(Machine machine, int id)
         {
             InitializeComponent();
-        }
-
-        public int MachineID;
-
-        public void UpdateID()
-        {
+            this.machine = machine;
+            MachineID = id;
             lblMachineID.Text = $"Machine: {MachineID}";
         }
+
+        private int MachineID;
+        private Machine machine;
 
         public void UpdateTime(string time)
         {
             lblTime.Text = $"Time: {time}";
+        }
+
+        public void Start()
+        {
+            _ = machine.StartMachine();
+        }
+        public void Stop()
+        {
+            machine.StopMachine();
+        }
+
+        private void btnInterrupt_Click(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void btnCrash_Click(object sender, EventArgs e)
+        {
+            
         }
     }
 }

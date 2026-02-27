@@ -34,7 +34,6 @@
             btnInterrupt = new Button();
             btnCrash = new Button();
             btnViewMessage = new Button();
-            btnInject = new Button();
             SuspendLayout();
             // 
             // lblMachineID
@@ -72,15 +71,17 @@
             btnInterrupt.TabIndex = 3;
             btnInterrupt.Text = "Interrupt";
             btnInterrupt.UseVisualStyleBackColor = true;
+            btnInterrupt.Click += btnInterrupt_Click;
             // 
             // btnCrash
             // 
-            btnCrash.Location = new Point(400, 87);
+            btnCrash.Location = new Point(400, 52);
             btnCrash.Name = "btnCrash";
             btnCrash.Size = new Size(94, 29);
             btnCrash.TabIndex = 4;
             btnCrash.Text = "Crash";
             btnCrash.UseVisualStyleBackColor = true;
+            btnCrash.Click += btnCrash_Click;
             // 
             // btnViewMessage
             // 
@@ -91,20 +92,10 @@
             btnViewMessage.Text = "View Message";
             btnViewMessage.UseVisualStyleBackColor = true;
             // 
-            // btnInject
-            // 
-            btnInject.Location = new Point(400, 52);
-            btnInject.Name = "btnInject";
-            btnInject.Size = new Size(94, 29);
-            btnInject.TabIndex = 6;
-            btnInject.Text = "Inject";
-            btnInject.UseVisualStyleBackColor = true;
-            // 
             // MachineTile
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(btnInject);
             Controls.Add(btnViewMessage);
             Controls.Add(btnCrash);
             Controls.Add(btnInterrupt);
@@ -125,6 +116,5 @@
         private Button btnInterrupt;
         private Button btnCrash;
         private Button btnViewMessage;
-        private Button btnInject;
     }
 }

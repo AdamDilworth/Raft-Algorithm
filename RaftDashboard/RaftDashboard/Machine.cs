@@ -6,19 +6,25 @@ using System.Threading.Tasks;
 
 namespace RaftDashboard
 {
-    internal class Machine
+    public class Machine
     {
-        private CancellationTokenSource cts;
+        // Data for multithreaded and asynchronous behavior
+        private readonly CancellationTokenSource cts;
+        private ManualResetEventSlim pauseEvent;
+
+        // Message Passing Bus to be implemented
         private string MessageSend;
         private string MessageReceive;
 
-        public int Id { get; set; }
+        private readonly int ID;
         public double Time { get; set; }
         public event Action? OnTick;
 
-        public Machine(CancellationTokenSource token)
+        public Machine(int id)
         {
-            cts = token;//new CancellationTokenSource();
+            ID = id;
+            cts = new CancellationTokenSource();
+            pauseEvent = new ManualResetEventSlim(true);
             Time = 0;
         }
 
@@ -50,13 +56,13 @@ namespace RaftDashboard
             }
         }
 
-        public async Task SendMessage(string message)
+        public async Task Send(string message)
         {
             MessageSend = message;
             // ...
         }
 
-        public async Task GetMessage(string message)
+        public async Task Recieve(string message)
         {
             MessageReceive = message;
             // ...

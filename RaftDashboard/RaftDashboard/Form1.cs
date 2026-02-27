@@ -2,9 +2,11 @@ namespace RaftDashboard
 {
     public partial class Dashboard : Form
     {
-        private List<Machine> machines = new();
-        private List<Task> tasks = new();
-        private List<CancellationTokenSource> tokens = new();
+        //private List<Machine> machines = new();
+        //private List<Task> tasks = new();
+        //private List<CancellationTokenSource> tokens = new();
+
+        private List<MachineTile> machineTiles = new();
 
         public Dashboard()
         {
@@ -17,40 +19,33 @@ namespace RaftDashboard
             int count = (int)numMachines.Value;
             int timeout = (int)numMinutes.Value;
 
-            machines.Clear();
-            tasks.Clear();
-            tokens.Clear();
             flpMachineInfo.Controls.Clear();
 
             for (int i = 0; i < count; i++)
             {
-                // Create token to run each thread
-                var cts = new CancellationTokenSource();
-                tokens.Add(cts);
+
                 // Create machine and add it to new tile
-                var machine = new Machine(cts) { Id = i };
-                var tile = new MachineTile { MachineID = i };
-                tile.UpdateID();
+                var machine = new Machine(i + 1);
+                var tile = new MachineTile(machine, i + 1);
+                machineTiles.Add(tile);
                 flpMachineInfo.Controls.Add(tile);
 
-                // Update display after machine updates its time
+                // Connect the OnTick event with updating the time on screen
                 machine.OnTick += () =>
                 {
                     Invoke(() => tile.UpdateTime(machine.Time.ToString()));
                 };
 
                 // Add tasks and machines to lists
-                var task = Task.Run(() => machine.StartMachine());
-                tasks.Add(task);
-                machines.Add(machine);
+                tile.Start();
             }
 
-            // Stop after timeout
+            // Wait for time specified
             Task.Run(async () =>
             {
                 await Task.Delay(TimeSpan.FromMinutes(timeout));
-                foreach (var t in tokens)
-                    t.Cancel();
+                foreach (var t in machineTiles)
+                    t.Stop();
             });
         }
     }
