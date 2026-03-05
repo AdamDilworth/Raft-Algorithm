@@ -44,7 +44,7 @@ namespace RaftDashboard
 
         private void btnCrash_Click(object sender, EventArgs e)
         {
-            machine.StopMachine();
+            machine.Time = 0;
         }
 
         private void btnResume_Click(object sender, EventArgs e)
