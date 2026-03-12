@@ -34,7 +34,7 @@ namespace RaftDashboard
                 // Connect the OnTick event with updating the time on screen
                 machine.OnTick += () =>
                 {
-                    Invoke(() => tile.UpdateTime(machine.Time.ToString()));
+                    Invoke(() => tile.UpdateTime());
                 };
 
                 // Add tasks and machines to lists

@@ -23,9 +23,9 @@ namespace RaftDashboard
         private readonly int MachineID;
         private readonly Machine machine;
 
-        public void UpdateTime(string time)
+        public void UpdateTime()
         {
-            lblTime.Text = $"Time: {time}";
+            lblTime.Text = $"Time: {(Math.Round((decimal)machine.Time, 2)).ToString()}";
         }
 
         public void Start()

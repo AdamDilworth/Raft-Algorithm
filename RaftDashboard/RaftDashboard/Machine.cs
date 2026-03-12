@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -22,6 +23,7 @@ namespace RaftDashboard
 
         private readonly int ID;
         public double Time { get; set; }
+        //public enum Role { Follower, Candidate, Leader } // Distinguish Roles for RAFT algorithm
         public event Action? OnTick;
 
         // Constructor
@@ -47,7 +49,7 @@ namespace RaftDashboard
             }
             catch (OperationCanceledException)
             {
-                Console.WriteLine("Task was gracefully cancelled.");
+                Debug.WriteLine("Task was gracefully cancelled.");
             }
         }
 
@@ -74,7 +76,7 @@ namespace RaftDashboard
         {
             while (!token.IsCancellationRequested)
             {
-                //Console.WriteLine("Thread: " + id + " Time: " + time);
+                //Debug.WriteLine("Thread: " + id + " Time: " + time);
                 if (Inbox.Reader.TryRead(out var json))
                 {
                     var message = JsonSerializer.Deserialize<Message>(json);
@@ -82,6 +84,7 @@ namespace RaftDashboard
                 }
                 pauseEvent.Wait();
                 OnTick?.Invoke();
+                //Debug.WriteLine($"Machine {ID} Clock loop on thread {Thread.CurrentThread.ManagedThreadId}");
                 await Task.Delay(100);
                 Time += 0.1;
             }
