@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -52,18 +53,37 @@ namespace RaftDashboard
             machine.ResumeMachine();
         }
 
-        private void btnSendMessage_Click(object sender, EventArgs e)
+        private async void btnSendMessage_Click(object sender, EventArgs e)
         {
-            using (var prompt = new TargetPromptForm())
+            if (machine.Role == Machine.Roles.Leader)
             {
-                if (prompt.ShowDialog() == DialogResult.OK)
+                await machine.SendAppendEntries();
+            }
+            else
+            {
+                using (var prompt = new TargetPromptForm())
                 {
-                    int targetId = prompt.TargetID;
-                    // send message
-                    Message msg = new Message() { From = MachineID, To = targetId, Type = "Ping", Payload = $"Test String from machine {MachineID}" };
-                    _ = machine.Send(msg);
+                    if (prompt.ShowDialog() == DialogResult.OK)
+                    {
+                        int targetId = prompt.TargetID;
+                        // send message
+                        var payload = new
+                        {
+                            Text = $"Test String from machine {MachineID}"
+                        };
+                        Message msg = new Message()
+                        {
+                            From = MachineID,
+                            To = targetId,
+                            Type = "Ping",
+                            Payload = JsonSerializer.SerializeToElement(payload)
+                        };
+
+                        _ = machine.Send(msg);
+                    }
                 }
             }
+                
         }
 
         private void btnViewMessage_Click(object sender, EventArgs e)

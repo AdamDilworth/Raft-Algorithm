@@ -12,6 +12,25 @@ namespace RaftDashboard
 {
     public class Machine
     {
+        /* Data Members */
+
+        // Identification
+        private readonly int ID;
+
+        // Randomness
+        private static readonly Random rng = new();
+        private readonly int minDelay = 150;
+        private readonly int maxDelay = 300;
+        private readonly double lossChance = 0.05;
+
+        // RAFT Leadership
+        public enum Roles { Follower, Candidate, Leader }
+        public Roles Role;
+        private int CurrentTerm = 0; // This should increment after each election
+        private int CommitIndex = 0; // Incremented after every commit
+        private int LastApplied = 0; // 
+        private int responseCount = 0; // Used for consensus
+
         // Data for multithreaded and asynchronous behavior
         private CancellationTokenSource cts;
         private ManualResetEventSlim pauseEvent;
@@ -19,12 +38,16 @@ namespace RaftDashboard
         // Message Passing Bus
         public Channel<string> Inbox { get; } = Channel.CreateUnbounded<string>();
         private readonly List<Machine> _peers;
-        private string currentMsg = "";
+        private string MessageDisplay = "";
 
-        private readonly int ID;
+        // Log
+        internal List<LogEntry> Log {  get; } = [];
+
+        // Stopwatch and Event
         public double Time { get; set; }
-        //public enum Role { Follower, Candidate, Leader } // Distinguish Roles for RAFT algorithm
         public event Action? OnTick;
+
+        /* Methods */
 
         // Constructor
         public Machine(int id, List<Machine> peers)
@@ -34,6 +57,7 @@ namespace RaftDashboard
             pauseEvent = new ManualResetEventSlim(true);
             Time = 0;
             _peers = peers;
+            Role = (id == 0 ? Roles.Leader : Roles.Follower); // Defaulting for the sake of doing log replication for now
         }
 
         // Start thread
@@ -90,23 +114,96 @@ namespace RaftDashboard
             }
         }
 
+        // Pass a json message
         public async Task Send(Message message)
         {
             var json = JsonSerializer.Serialize(message);
             var target = _peers.First(p => p.ID == message.To);
+
+            // Simulate delay
+            await Task.Delay(rng.Next(minDelay, maxDelay));
+            // Simulate message loss
+            if (rng.NextDouble() < lossChance)
+                return;
+            // Then actually send
             await target.Inbox.Writer.WriteAsync(json);
         }
 
+        // Handle messages received from other machines
         public void Receive(Message message)
         {
-            // Handle Message
-            currentMsg = message.Payload;
+            // Handle Action
+            switch (message.Type)
+            {
+                case "AppendEntries":
+                    // Leader sent entries to append, Followers must handle this
+                    HandleAppendEntries(message);
+                    break;
+
+                case "AppendEntriesResponse":
+                    // Followers replied to leader, Leader must handle this
+                    HandleAppendReplies(message);
+                    break;
+
+                case "Ping":
+                    // Simple Message
+                    MessageDisplay = message.Payload.GetProperty("Text").GetString();
+                    break;
+
+                default:
+                    Debug.WriteLine($"Machine {ID} received message outside of defined cases");
+                    break;
+            }
         }
 
-        // Test function
+        // Test function to show pinged messages
         public string ShowMessage()
         {
-            return currentMsg;
+            return MessageDisplay;
+        }
+
+        // Leader sends entries for Followers to copy
+        public async Task SendAppendEntries()
+        {
+            // Dummy Data
+            LogEntry newEntry = new LogEntry() { Term = CurrentTerm, Index = CommitIndex, Command = "x = 10;" };
+
+            foreach (var follower in _peers.Where(p => p.ID != this.ID))
+            {
+                var payload = new
+                {
+                    Term = CurrentTerm,
+                    LeaderID = ID,
+                    PrevLogIndex = Log.Count - 1,
+                    PrevLogTerm = Log.LastOrDefault()?.Term ?? 0,
+                    Entries = new List<LogEntry> { newEntry },
+                    LeaderCommit = CommitIndex
+                };
+
+                var msg = new Message
+                {
+                    From = ID,
+                    To = follower.ID,
+                    Type = "AppendEntries",
+                    Payload = JsonSerializer.SerializeToElement(payload)
+                };
+
+                await Send(msg);
+            }
+        }
+
+        // Followers respond to Leader's Entries
+        public async void HandleAppendEntries(Message message)
+        {
+            // @TODO Have Followers approve entries
+            MessageDisplay = "Append Entries Case";
+        }
+
+        // Leader responds to followers replies
+        public async void HandleAppendReplies(Message message)
+        {
+            // @TODO Have Leader commit entries
+            MessageDisplay = "Append Entries Replies Case";
         }
     }
 }
