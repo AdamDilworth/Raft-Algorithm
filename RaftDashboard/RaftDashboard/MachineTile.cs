@@ -24,14 +24,42 @@ namespace RaftDashboard
         private readonly int MachineID;
         private readonly Machine machine;
 
-        public void UpdateTime()
+        public void UpdateMachine()
         {
-            lblTime.Text = $"Time: {Math.Round((decimal)machine.Time, 1)}";
+            lblMachineID.Text = $"Machine: {MachineID} ({machine.Role})";
+
+            if (machine.Role == Machine.Roles.Leader)
+            {
+                this.BackColor = Color.LightGreen;
+            }
+            else if (machine.Role == Machine.Roles.Candidate)
+            {
+                this.BackColor = Color.LightSalmon;
+            }
+            else
+            {
+                this.BackColor = SystemColors.Control;
+            }
+        }
+
+        public void UpdateUptime()
+        {
+            lblUptime.Text = $"Uptime: {Math.Round((decimal)machine.Time, 1)} seconds";
         }
 
         public void UpdateMessage()
         {
-            messageLbl.Text = $"Message: {machine.ShowMessage()}";
+            lblMessage.Text = $"Message: {machine.ShowMessage()}";
+        }
+
+        public void UpdateLogIndex()
+        {
+            lblLogIndex.Text = $"Log Index: {machine.Log.Count - 1}";
+        }
+
+        public void UpdateSharedStateX()
+        {
+            lblSharedStateX.Text = $"Shared State (X): {machine.SharedStateX}";
         }
 
         public void Start()
@@ -58,46 +86,22 @@ namespace RaftDashboard
             machine.ResumeMachine();
         }
 
-        private async void btnSendMessage_Click(object sender, EventArgs e)
+        private void btnSendMessage_Click(object sender, EventArgs e)
         {
             if (machine.Role == Machine.Roles.Leader)
             {
-                await machine.SendAppendEntries();
-                MessageBox.Show($"Machine {MachineID} (Leader) broadcasted AppendEntries.", "Broadcast Sent");
-            }
-            else
-            {
-                using (var prompt = new TargetPromptForm())
+                using (var prompt = new CommandPromptForm())
                 {
                     if (prompt.ShowDialog() == DialogResult.OK)
                     {
-                        int targetId = prompt.TargetID;
-                        // send message
-                        var payload = new
-                        {
-                            Text = $"Test String from machine {MachineID}"
-                        };
-                        Message msg = new Message()
-                        {
-                            From = MachineID,
-                            To = targetId,
-                            Type = "Ping",
-                            PayloadJson = JsonSerializer.Serialize(payload)
-                        };
-
-                        _ = machine.Send(msg);
+                        machine.AddClientCommand(prompt.CommandString);
                     }
                 }
             }
-
-        }
-
-        private void btnViewMessage_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show(
-                            $"{machine.ShowMessage()}",
-                            $"Machine {MachineID}'s message"
-                            );
+            else
+            {
+                MessageBox.Show($"Machine {MachineID} is a Follower. Clients must redirect requests to the Leader.", "Redirect Required");
+            }
         }
     }
 }

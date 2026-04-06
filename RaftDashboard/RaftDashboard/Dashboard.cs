@@ -22,8 +22,11 @@ namespace RaftDashboard
             // UI thread updates itself without background threads
             foreach (var tile in machineTiles)
             {
-                tile.UpdateTime();
+                tile.UpdateMachine();
+                tile.UpdateUptime();
                 tile.UpdateMessage();
+                tile.UpdateLogIndex();
+                tile.UpdateSharedStateX();
             }
         }
 

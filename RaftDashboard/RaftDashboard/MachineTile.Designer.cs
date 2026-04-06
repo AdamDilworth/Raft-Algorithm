@@ -29,12 +29,14 @@
         private void InitializeComponent()
         {
             lblMachineID = new Label();
-            lblTime = new Label();
+            lblUptime = new Label();
             btnSendMessage = new Button();
             btnInterrupt = new Button();
             btnCrash = new Button();
             btnResume = new Button();
-            messageLbl = new Label();
+            lblMessage = new Label();
+            lblLogIndex = new Label();
+            lblSharedStateX = new Label();
             SuspendLayout();
             // 
             // lblMachineID
@@ -47,14 +49,14 @@
             lblMachineID.TabIndex = 0;
             lblMachineID.Text = "Machine";
             // 
-            // lblTime
+            // lblUptime
             // 
-            lblTime.Location = new Point(25, 79);
-            lblTime.Margin = new Padding(4, 0, 4, 0);
-            lblTime.Name = "lblTime";
-            lblTime.Size = new Size(439, 31);
-            lblTime.TabIndex = 1;
-            lblTime.Text = "Time: ";
+            lblUptime.Location = new Point(25, 58);
+            lblUptime.Margin = new Padding(4, 0, 4, 0);
+            lblUptime.Name = "lblUptime";
+            lblUptime.Size = new Size(439, 31);
+            lblUptime.TabIndex = 1;
+            lblUptime.Text = "Uptime: ";
             // 
             // btnSendMessage
             // 
@@ -100,25 +102,45 @@
             btnResume.UseVisualStyleBackColor = true;
             btnResume.Click += btnResume_Click;
             // 
-            // messageLbl
+            // lblMessage
             // 
-            messageLbl.Location = new Point(25, 110);
-            messageLbl.Margin = new Padding(4, 0, 4, 0);
-            messageLbl.Name = "messageLbl";
-            messageLbl.Size = new Size(439, 31);
-            messageLbl.TabIndex = 7;
-            messageLbl.Text = "Message: ";
+            lblMessage.Location = new Point(25, 89);
+            lblMessage.Margin = new Padding(4, 0, 4, 0);
+            lblMessage.Name = "lblMessage";
+            lblMessage.Size = new Size(439, 31);
+            lblMessage.TabIndex = 7;
+            lblMessage.Text = "Message: ";
+            // 
+            // lblLogIndex
+            // 
+            lblLogIndex.Location = new Point(25, 120);
+            lblLogIndex.Margin = new Padding(4, 0, 4, 0);
+            lblLogIndex.Name = "lblLogIndex";
+            lblLogIndex.Size = new Size(439, 31);
+            lblLogIndex.TabIndex = 8;
+            lblLogIndex.Text = "Log Index: ";
+            // 
+            // lblSharedStateX
+            // 
+            lblSharedStateX.Location = new Point(25, 151);
+            lblSharedStateX.Margin = new Padding(4, 0, 4, 0);
+            lblSharedStateX.Name = "lblSharedStateX";
+            lblSharedStateX.Size = new Size(439, 31);
+            lblSharedStateX.TabIndex = 9;
+            lblSharedStateX.Text = "Shared State (X): ";
             // 
             // MachineTile
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(messageLbl);
+            Controls.Add(lblSharedStateX);
+            Controls.Add(lblLogIndex);
+            Controls.Add(lblMessage);
             Controls.Add(btnResume);
             Controls.Add(btnCrash);
             Controls.Add(btnInterrupt);
             Controls.Add(btnSendMessage);
-            Controls.Add(lblTime);
+            Controls.Add(lblUptime);
             Controls.Add(lblMachineID);
             Margin = new Padding(4);
             Name = "MachineTile";
@@ -129,11 +151,13 @@
         #endregion
 
         private Label lblMachineID;
-        private Label lblTime;
+        private Label lblUptime;
         private Button btnSendMessage;
         private Button btnInterrupt;
         private Button btnCrash;
         private Button btnResume;
-        private Label messageLbl;
+        private Label lblMessage;
+        private Label lblLogIndex;
+        private Label lblSharedStateX;
     }
 }

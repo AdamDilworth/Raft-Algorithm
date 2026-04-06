@@ -34,6 +34,9 @@ namespace RaftDashboard
         private double electionTimeout;
         private int? VotedFor = null;
         private int votesReceived = 0;
+        private Dictionary<int, int> nextIndex = new(); // Tracks what the next log entry to send to that follower is
+        private Dictionary<int, int> matchIndex = new(); // Tracks the highest log entry known to be replicated on that follower
+        public int SharedStateX { get; private set; } = 0;
 
         // Data for multithreaded and asynchronous behavior
         private CancellationTokenSource cts;
@@ -46,7 +49,7 @@ namespace RaftDashboard
 
         // Log
         public IReadOnlyList<LogEntry> Log => _log.AsReadOnly();
-        private readonly List<LogEntry> _log = [];
+        private readonly List<LogEntry> _log = [ new LogEntry { Term = 0, Index = 0, Command = "INIT" } ];
 
         // Stopwatch and Event
         public double Time { get; private set; }
@@ -104,7 +107,16 @@ namespace RaftDashboard
         // Crash
         public void Crash()
         {
+            // Simulate total wipe
             Time = 0;
+            lastHeartbeatTime = 0;
+            Role = Roles.Follower;
+            CurrentTerm = 0;
+            VotedFor = null;
+            MessageDisplay = "Crashed.";
+
+            // Clear out the inbox
+            while (Inbox.Reader.TryRead(out _)) { }
         }
 
         // Increment clock every .1 second
@@ -117,7 +129,14 @@ namespace RaftDashboard
                     var message = JsonSerializer.Deserialize<Message>(json);
                     if (message != null)
                     {
-                        Receive(message);
+                        try
+                        {
+                            Receive(message);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Machine {ID} crashed processing message: {ex.Message}");
+                        }
                     }
                 }
 
@@ -205,18 +224,34 @@ namespace RaftDashboard
         // Leader sends entries for Followers to copy
         public async Task SendAppendEntries()
         {
-            // Dummy Data
-            LogEntry newEntry = new LogEntry() { Term = CurrentTerm, Index = CommitIndex, Command = "x = 10;" };
-
             foreach (var follower in _peers.Where(p => p.ID != this.ID))
             {
+                // Default to current log count
+                int nextIdx = nextIndex.ContainsKey(follower.ID) ? nextIndex[follower.ID] : Log.Count;
+
+                int prevLogIndex = nextIdx - 1;
+                int prevLogTerm = 0;
+
+                // Get term from previous log entry
+                if (prevLogIndex >= 0 && prevLogIndex < Log.Count)
+                {
+                    prevLogTerm = Log[prevLogIndex].Term;
+                }
+
+                // Grab all necessary entries
+                List<LogEntry> entriesToSend = new();
+                if (nextIdx < Log.Count)
+                {
+                    entriesToSend = _log.GetRange(nextIdx, Log.Count - nextIdx);
+                }
+
                 var payload = new
                 {
                     Term = CurrentTerm,
                     LeaderID = ID,
-                    PrevLogIndex = Log.Count - 1,
-                    PrevLogTerm = Log.LastOrDefault()?.Term ?? 0,
-                    Entries = new List<LogEntry> { newEntry },
+                    PrevLogIndex = prevLogIndex,
+                    PrevLogTerm = prevLogTerm,
+                    Entries = entriesToSend,
                     LeaderCommit = CommitIndex
                 };
 
@@ -236,24 +271,141 @@ namespace RaftDashboard
         public void HandleAppendEntries(Message message)
         {
             JsonDocument doc = JsonDocument.Parse(message.PayloadJson);
-            int msgTerm = doc.RootElement.GetProperty("Term").GetInt32();
+            var root = doc.RootElement;
 
-            // If a leader sends a hearbeat with newer or equal value, acknowledge
-            if (msgTerm >= CurrentTerm)
+            int msgTerm = root.GetProperty("Term").GetInt32();
+            int leaderId = root.GetProperty("LeaderID").GetInt32();
+            int prevLogIndex = root.GetProperty("PrevLogIndex").GetInt32();
+            int prevLogTerm = root.GetProperty("PrevLogTerm").GetInt32();
+            int leaderCommit = root.GetProperty("LeaderCommit").GetInt32();
+
+            // Reply false if term < currentTerm
+            if (msgTerm < CurrentTerm)
             {
-                CurrentTerm = msgTerm;
-                // Step down if machine was a candidate
-                Role = Roles.Follower;
-                lastHeartbeatTime = Time;
-                MessageDisplay = $"Heartbeat from Leader (Term {CurrentTerm}).";
+                SendAppendReply(message.From, false);
+                return;
             }
+
+            CurrentTerm = msgTerm;
+            Role = Roles.Follower;
+            lastHeartbeatTime = Time;
+            MessageDisplay = $"Following M{leaderId} (Term {CurrentTerm}).";
+
+            // Reply false if log mismatch
+            if (Log.Count <= prevLogIndex || Log[prevLogIndex].Term != prevLogTerm)
+            {
+                SendAppendReply(message.From, false);
+                return;
+            }
+
+            // Logs match. Overwrite conflicts, append new ones
+            var entriesProp = root.GetProperty("Entries");
+            int insertIndex = prevLogIndex + 1;
+
+            foreach (var entryElement in entriesProp.EnumerateArray())
+            {
+                var entry = JsonSerializer.Deserialize<LogEntry>(entryElement.GetRawText());
+                if (entry != null)
+                {
+                    if (insertIndex < Log.Count)
+                    {
+                        // Conflict. Overwrite the log
+                        _log.RemoveRange(insertIndex, _log.Count - insertIndex);
+                    }
+                    _log.Add(entry);
+                    ++insertIndex;
+                }
+            }
+
+            // Update commit index
+            if (leaderCommit > CommitIndex)
+            {
+                CommitIndex = Math.Min(leaderCommit, Log.Count - 1);
+                MessageDisplay = $"Committed up to {CommitIndex}.";
+            }
+
+            if (leaderCommit < CommitIndex)
+            {
+                CommitIndex = Math.Min(leaderCommit, Log.Count - 1);
+                MessageDisplay = $"Committed up to {CommitIndex}.";
+            }
+            ApplyCommittedLogs();
+
+            // Success
+            SendAppendReply(message.From, true);
+
         }
 
         // Leader responds to followers replies
         public void HandleAppendReplies(Message message)
         {
-            // @TODO Have Leader commit entries
-            MessageDisplay = "Append Entries Replies Case";
+            if (Role != Roles.Leader)
+            {
+                return;
+            }
+
+            JsonDocument doc = JsonDocument.Parse(message.PayloadJson);
+            int msgTerm = doc.RootElement.GetProperty("Term").GetInt32();
+            bool success = doc.RootElement.GetProperty("Success").GetBoolean();
+            int followerMatchIndex = doc.RootElement.GetProperty("MatchIndex").GetInt32();
+
+            if (msgTerm > CurrentTerm)
+            {
+                CurrentTerm = msgTerm;
+                Role = Roles.Follower;
+                return;
+            }
+
+            int followerId = message.From;
+
+            if (success)
+            {
+                // Update tracking
+                nextIndex[followerId] = followerMatchIndex + 1;
+                matchIndex[followerId] = followerMatchIndex;
+
+                // Check for Consensus
+                // Look for highest index that a mahority of nodes have replicated
+                bool committedNew = false;
+                for (int N = Log.Count - 1; N > CommitIndex; --N)
+                {
+                    if (Log[N].Term == CurrentTerm)
+                    {
+                        int replicationCount = 1;
+                        foreach (var peer in _peers.Where(p => p.ID != this.ID))
+                        {
+                            if (matchIndex.ContainsKey(peer.ID) && matchIndex[peer.ID] >= N)
+                            {
+                                ++replicationCount;
+                            }
+                        }
+
+                        if (replicationCount > _peers.Count / 2.0)
+                        {
+                            CommitIndex = N;
+                            MessageDisplay = $"Consensus Reached. Committed Index {CommitIndex}";
+                            committedNew = true;
+                            // Found the highest committable index
+                            break;
+                        }
+                    }
+                }
+
+                // Execute the logs
+                if (committedNew)
+                {
+                    ApplyCommittedLogs();
+                    _ = SendAppendEntries();
+                }
+            }
+            else
+            {
+                // Inconsistent. Backup a step and try again next hearbeat
+                if (nextIndex.ContainsKey(followerId) && nextIndex[followerId] > 1)
+                {
+                    --nextIndex[followerId];
+                }
+            }
         }
 
         private void StartElection()
@@ -355,6 +507,66 @@ namespace RaftDashboard
                     MessageDisplay = $"Elected Leader for Term {CurrentTerm}.";
                     // Force an immediate heartbeat
                     lastHeartbeatTime = 0;
+
+                    // Initialize leader state tracking
+                    nextIndex.Clear();
+                    matchIndex.Clear();
+                    foreach (var peer in _peers.Where(p => p.ID != this.ID))
+                    {
+                        // Initially set to the leader's next empty slot
+                        nextIndex[peer.ID] = Log.Count;
+                        // Assume no replication yet
+                        matchIndex[peer.ID] = 0;
+                    }
+                }
+            }
+        }
+
+        private void SendAppendReply(int leaderId, bool success)
+        {
+            var replyPayload = new { Term = CurrentTerm, Success = success, MatchIndex = Log.Count - 1 };
+            var replyMsg = new Message
+            {
+                From = ID,
+                To = leaderId,
+                Type = "AppendEntriesResponse",
+                PayloadJson = JsonSerializer.Serialize(replyPayload)
+            };
+
+            _ = Send(replyMsg);
+        }
+
+        public void AddClientCommand(string command)
+        {
+            if (Role == Roles.Leader)
+            {
+                _log.Add(new LogEntry { Term = CurrentTerm, Index = Log.Count, Command = command });
+                MessageDisplay = $"Added command: {command}";
+            }
+        }
+
+        private void ApplyCommittedLogs()
+        {
+            // Run logs that have not been executed yet
+            while (LastApplied < CommitIndex)
+            {
+                ++LastApplied;
+                string command = Log[LastApplied].Command;
+
+                // Parse the command
+                string[] parts = command.Split(' ');
+                if (parts.Length == 3 && parts[1] == "X")
+                {
+                    if (int.TryParse(parts[2], out int val))
+                    {
+                        switch (parts[0])
+                        {
+                            case "SET": SharedStateX = val; break;
+                            case "ADD": SharedStateX += val; break;
+                            case "SUBTRACT": SharedStateX -= val; break;
+                            case "MULTIPLY": SharedStateX *= val; break;
+                        }
+                    }
                 }
             }
         }
