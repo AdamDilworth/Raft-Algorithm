@@ -2,7 +2,7 @@ namespace RaftDashboard
 {
     public partial class Dashboard : Form
     {
-        
+
         private List<Machine> machines = new();
         private List<MachineTile> machineTiles = new();
         private System.Windows.Forms.Timer uiTimer;
@@ -34,7 +34,6 @@ namespace RaftDashboard
         {
             btnStart.Text = "Restart";
             int count = (int)numMachines.Value;
-            int timeout = (int)numMinutes.Value;
 
             // Stop existing machines
             foreach (var m in machines)
@@ -64,15 +63,18 @@ namespace RaftDashboard
                 tile.Start();
             }
 
-            // Wait for time specified
-            Task.Run(async () =>
-            {
-                await Task.Delay(TimeSpan.FromMinutes(timeout));
-                foreach (var t in machineTiles)
-                    t.Stop();
-            });
-
             uiTimer.Start();
+        }
+
+        private void numMachines_ValueChanged(object sender, EventArgs e)
+        {
+            NumericUpDown num = (NumericUpDown)sender;
+
+            if (num.Value % 2 == 0)
+            {
+                num.Value += 1;
+                if (num.Value > num.Maximum) num.Value = num.Maximum;
+            }
         }
     }
 }

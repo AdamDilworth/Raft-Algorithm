@@ -45,7 +45,7 @@
             lblMachineID.Location = new Point(25, 27);
             lblMachineID.Margin = new Padding(4, 0, 4, 0);
             lblMachineID.Name = "lblMachineID";
-            lblMachineID.Size = new Size(212, 31);
+            lblMachineID.Size = new Size(254, 31);
             lblMachineID.TabIndex = 0;
             lblMachineID.Text = "Machine";
             // 
@@ -60,21 +60,21 @@
             // 
             // btnSendMessage
             // 
-            btnSendMessage.Location = new Point(472, 154);
+            btnSendMessage.Location = new Point(467, 154);
             btnSendMessage.Margin = new Padding(4);
             btnSendMessage.Name = "btnSendMessage";
-            btnSendMessage.Size = new Size(146, 36);
+            btnSendMessage.Size = new Size(151, 36);
             btnSendMessage.TabIndex = 2;
-            btnSendMessage.Text = "Send Message";
+            btnSendMessage.Text = "Send Command";
             btnSendMessage.UseVisualStyleBackColor = true;
             btnSendMessage.Click += btnSendMessage_Click;
             // 
             // btnInterrupt
             // 
-            btnInterrupt.Location = new Point(472, 22);
+            btnInterrupt.Location = new Point(467, 22);
             btnInterrupt.Margin = new Padding(4);
             btnInterrupt.Name = "btnInterrupt";
-            btnInterrupt.Size = new Size(146, 36);
+            btnInterrupt.Size = new Size(151, 36);
             btnInterrupt.TabIndex = 3;
             btnInterrupt.Text = "Interrupt";
             btnInterrupt.UseVisualStyleBackColor = true;
@@ -82,10 +82,10 @@
             // 
             // btnCrash
             // 
-            btnCrash.Location = new Point(472, 66);
+            btnCrash.Location = new Point(467, 66);
             btnCrash.Margin = new Padding(4);
             btnCrash.Name = "btnCrash";
-            btnCrash.Size = new Size(146, 36);
+            btnCrash.Size = new Size(151, 36);
             btnCrash.TabIndex = 4;
             btnCrash.Text = "Crash";
             btnCrash.UseVisualStyleBackColor = true;
@@ -93,10 +93,10 @@
             // 
             // btnResume
             // 
-            btnResume.Location = new Point(472, 110);
+            btnResume.Location = new Point(467, 110);
             btnResume.Margin = new Padding(4);
             btnResume.Name = "btnResume";
-            btnResume.Size = new Size(146, 36);
+            btnResume.Size = new Size(151, 36);
             btnResume.TabIndex = 6;
             btnResume.Text = "Resume";
             btnResume.UseVisualStyleBackColor = true;

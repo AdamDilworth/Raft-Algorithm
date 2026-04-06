@@ -28,8 +28,7 @@ namespace RaftDashboard
         public Roles Role { get; private set; }
         private int CurrentTerm = 0; // This should increment after each election
         private int CommitIndex = 0; // Incremented after every commit
-        private int LastApplied = 0; // 
-        private int responseCount = 0; // Used for consensus
+        private int LastApplied = 0;
         private double lastHeartbeatTime = 0;
         private double electionTimeout;
         private int? VotedFor = null;
@@ -124,7 +123,7 @@ namespace RaftDashboard
         {
             while (!token.IsCancellationRequested)
             {
-                if (Inbox.Reader.TryRead(out var json))
+                while (Inbox.Reader.TryRead(out var json))
                 {
                     var message = JsonSerializer.Deserialize<Message>(json);
                     if (message != null)
