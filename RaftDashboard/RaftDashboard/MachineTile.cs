@@ -73,7 +73,7 @@ namespace RaftDashboard
 
         private void btnInterrupt_Click(object sender, EventArgs e)
         {
-            machine.PauseMachine();
+            machine.SeverNetwork();
         }
 
         private void btnCrash_Click(object sender, EventArgs e)
@@ -83,7 +83,7 @@ namespace RaftDashboard
 
         private void btnResume_Click(object sender, EventArgs e)
         {
-            machine.ResumeMachine();
+            machine.RestoreNetwork();
         }
 
         private void btnSendMessage_Click(object sender, EventArgs e)

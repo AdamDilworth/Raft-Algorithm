@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RaftDashboard
+{
+    public class PersistentState
+    {
+        public int CurrentTerm { get; set; }
+        public int? VotedFor { get; set; }
+        public List<LogEntry> Log { get; set; } = new();
+    }
+}

@@ -17,6 +17,9 @@ namespace RaftDashboard
         // Identification
         private readonly int ID;
 
+        // I/O
+        private readonly string stateFilePath;
+
         // Randomness
         private static readonly Random rng = new();
         private readonly int minDelay = 150;
@@ -39,7 +42,6 @@ namespace RaftDashboard
 
         // Data for multithreaded and asynchronous behavior
         private CancellationTokenSource cts;
-        private ManualResetEventSlim pauseEvent;
 
         // Message Passing Bus
         public Channel<string> Inbox { get; } = Channel.CreateUnbounded<string>();
@@ -52,6 +54,7 @@ namespace RaftDashboard
 
         // Stopwatch and Event
         public double Time { get; private set; }
+        public bool IsNetworkConnected { get; private set; } = true;
 
         /* Methods */
 
@@ -60,12 +63,58 @@ namespace RaftDashboard
         {
             ID = id;
             cts = new CancellationTokenSource();
-            pauseEvent = new ManualResetEventSlim(true);
             Time = 0;
             _peers = peers;
-            Role = (id == 0 ? Roles.Leader : Roles.Follower); // Defaulting for the sake of doing log replication for now
+            Role = Roles.Follower;
+
+            // Persistence
+            stateFilePath = $"Machine_{ID}_State.json";
+
+            _log.Clear();
+            _log.Add(new LogEntry { Term = 0, Index = 0, Command = "INIT" });
+
+            LoadState();
+
             // Random timeout between 1.5 and 3 seconds
             electionTimeout = rng.Next(1500, 3000) / 1000.0;
+        }
+
+        // Save a state to a JSON file
+        private void SaveState()
+        {
+            var state = new PersistentState
+            {
+                CurrentTerm = this.CurrentTerm,
+                VotedFor = this.VotedFor,
+                Log = this._log
+            };
+
+            System.IO.File.WriteAllText(stateFilePath, JsonSerializer.Serialize(state));
+        }
+
+        // Load a state to a JSON file
+        private void LoadState()
+        {
+            if (System.IO.File.Exists(stateFilePath))
+            {
+                try
+                {
+                    var json = System.IO.File.ReadAllText(stateFilePath);
+                    var state = JsonSerializer.Deserialize<PersistentState>(json);
+                    if (state != null)
+                    {
+                        CurrentTerm = state.CurrentTerm;
+                        VotedFor = state.VotedFor;
+                        _log.Clear();
+                        _log.AddRange(state.Log);
+                        MessageDisplay = $"Loaded state from disk (Term {CurrentTerm}).";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to load state from Machine {ID}: {ex.Message}");
+                }
+            }
         }
 
         // Start thread
@@ -92,15 +141,18 @@ namespace RaftDashboard
         }
 
         // Pause thread
-        public void PauseMachine()
+        public void SeverNetwork()
         {
-            pauseEvent.Reset();
+            IsNetworkConnected = false;
+            MessageDisplay = "Network Connection Severed.";
         }
 
         // Resume thread
-        public void ResumeMachine()
+        public void RestoreNetwork()
         {
-            pauseEvent.Set();
+            IsNetworkConnected = true;
+            lastHeartbeatTime = Time;
+            MessageDisplay = "Network Connection Restored.";
         }
 
         // Crash
@@ -110,12 +162,21 @@ namespace RaftDashboard
             Time = 0;
             lastHeartbeatTime = 0;
             Role = Roles.Follower;
-            CurrentTerm = 0;
-            VotedFor = null;
+            CommitIndex = 0;
+            LastApplied = 0;
+            SharedStateX = 0;
             MessageDisplay = "Crashed.";
 
             // Clear out the inbox
             while (Inbox.Reader.TryRead(out _)) { }
+
+            _log.Clear();
+            VotedFor = null;
+            CurrentTerm = 0;
+
+            LoadState();
+
+            MessageDisplay = "Crashed and rebooted from disk.";
         }
 
         // Increment clock every .1 second
@@ -125,6 +186,8 @@ namespace RaftDashboard
             {
                 while (Inbox.Reader.TryRead(out var json))
                 {
+                    if (!IsNetworkConnected) continue;
+
                     var message = JsonSerializer.Deserialize<Message>(json);
                     if (message != null)
                     {
@@ -157,7 +220,6 @@ namespace RaftDashboard
                     }
                 }
 
-                pauseEvent.Wait();
                 await Task.Delay(100);
                 Time += 0.1;
             }
@@ -166,14 +228,15 @@ namespace RaftDashboard
         // Pass a json message
         public async Task Send(Message message)
         {
+            if (!IsNetworkConnected) return;
+
             var json = JsonSerializer.Serialize(message);
             var target = _peers.First(p => p.ID == message.To);
 
             // Simulate delay
             await Task.Delay(rng.Next(minDelay, maxDelay));
             // Simulate message loss
-            if (rng.NextDouble() < lossChance)
-                return;
+            if (rng.NextDouble() < lossChance) return;
             // Then actually send
             await target.Inbox.Writer.WriteAsync(json);
         }
@@ -298,6 +361,7 @@ namespace RaftDashboard
             }
 
             // Logs match. Overwrite conflicts, append new ones
+            bool logChanged = false;
             var entriesProp = root.GetProperty("Entries");
             int insertIndex = prevLogIndex + 1;
 
@@ -310,11 +374,15 @@ namespace RaftDashboard
                     {
                         // Conflict. Overwrite the log
                         _log.RemoveRange(insertIndex, _log.Count - insertIndex);
+                        logChanged = true;
                     }
                     _log.Add(entry);
+                    logChanged = true;
                     ++insertIndex;
                 }
             }
+
+            if (logChanged) SaveState();
 
             // Update commit index
             if (leaderCommit > CommitIndex)
@@ -416,6 +484,8 @@ namespace RaftDashboard
             votesReceived = 1;
             MessageDisplay = $"Started election for Term {CurrentTerm}.";
 
+            SaveState();
+
             // Reset timer for new election phase
             lastHeartbeatTime = Time;
             electionTimeout = rng.Next(1500, 3000) / 1000.0;
@@ -459,6 +529,8 @@ namespace RaftDashboard
                 VotedFor = candidateId;
                 lastHeartbeatTime = Time;
                 MessageDisplay = $"Voted for Machine {candidateId}.";
+
+                SaveState();
             }
 
             // Send the reply
@@ -540,6 +612,7 @@ namespace RaftDashboard
             if (Role == Roles.Leader)
             {
                 _log.Add(new LogEntry { Term = CurrentTerm, Index = Log.Count, Command = command });
+                SaveState();
                 MessageDisplay = $"Added command: {command}";
             }
         }
