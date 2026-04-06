@@ -32,6 +32,8 @@ namespace RaftDashboard
         private int responseCount = 0; // Used for consensus
         private double lastHeartbeatTime = 0;
         private double electionTimeout;
+        private int? VotedFor = null;
+        private int votesReceived = 0;
 
         // Data for multithreaded and asynchronous behavior
         private CancellationTokenSource cts;
@@ -119,11 +121,21 @@ namespace RaftDashboard
                     }
                 }
 
+                // Raft election logic
                 if (Role == Roles.Follower ||  Role == Roles.Candidate)
                 {
                     if (Time - lastHeartbeatTime > electionTimeout)
                     {
                         StartElection();
+                    }
+                }
+                else if (Role == Roles.Leader)
+                {
+                    // Send hearbeat every 0.5 seconds
+                    if (Time - lastHeartbeatTime > 0.5)
+                    {
+                        _ = SendAppendEntries();
+                        lastHeartbeatTime = Time;
                     }
                 }
 
@@ -162,6 +174,14 @@ namespace RaftDashboard
                 case "AppendEntriesResponse":
                     // Followers replied to leader, Leader must handle this
                     HandleAppendReplies(message);
+                    break;
+
+                case "RequestVote":
+                    HandleRequestVote(message);
+                    break;
+
+                case "RequestVoteResponse":
+                    HandleRequestVoteResponse(message);
                     break;
 
                 case "Ping":
@@ -215,8 +235,18 @@ namespace RaftDashboard
         // Followers respond to Leader's Entries
         public void HandleAppendEntries(Message message)
         {
-            lastHeartbeatTime = Time;
-            MessageDisplay = "Received Heartbeat/Entries";
+            JsonDocument doc = JsonDocument.Parse(message.PayloadJson);
+            int msgTerm = doc.RootElement.GetProperty("Term").GetInt32();
+
+            // If a leader sends a hearbeat with newer or equal value, acknowledge
+            if (msgTerm >= CurrentTerm)
+            {
+                CurrentTerm = msgTerm;
+                // Step down if machine was a candidate
+                Role = Roles.Follower;
+                lastHeartbeatTime = Time;
+                MessageDisplay = $"Heartbeat from Leader (Term {CurrentTerm}).";
+            }
         }
 
         // Leader responds to followers replies
@@ -230,13 +260,103 @@ namespace RaftDashboard
         {
             Role = Roles.Candidate;
             ++CurrentTerm;
+            // Vote for ourselves and count that vote
+            VotedFor = ID;
+            votesReceived = 1;
             MessageDisplay = $"Started election for Term {CurrentTerm}.";
 
             // Reset timer for new election phase
             lastHeartbeatTime = Time;
             electionTimeout = rng.Next(1500, 3000) / 1000.0;
 
-            // @TODO Send RequestVote message to peers
+            // Send RequestVote to everyone else
+            foreach (var peer in _peers.Where(p => p.ID != this.ID))
+            {
+                var payload = new { Term = CurrentTerm, CandidateId = ID };
+                var msg = new Message
+                {
+                    From = ID,
+                    To = peer.ID,
+                    Type = "RequestVote",
+                    PayloadJson = JsonSerializer.Serialize(payload)
+                };
+
+                _ = Send(msg);
+            }
+        }
+
+        private void HandleRequestVote(Message message)
+        {
+            JsonDocument doc = JsonDocument.Parse(message.PayloadJson);
+            int msgTerm = doc.RootElement.GetProperty("Term").GetInt32();
+            int candidateId = doc.RootElement.GetProperty("CandidateId").GetInt32();
+
+            // If see higher term, step down to Follower
+            if (msgTerm > CurrentTerm)
+            {
+                CurrentTerm = msgTerm;
+                Role = Roles.Follower;
+                VotedFor = null;
+            }
+
+            bool voteGranted = false;
+
+            // Grant vote if term matches and haven't voted for anyone else
+            if (msgTerm == CurrentTerm && (VotedFor == null || VotedFor == candidateId))
+            {
+                voteGranted = true;
+                VotedFor = candidateId;
+                lastHeartbeatTime = Time;
+                MessageDisplay = $"Voted for Machine {candidateId}.";
+            }
+
+            // Send the reply
+            var replyPayload = new { Term = CurrentTerm, VoteGranted = voteGranted };
+            var replyMsg = new Message
+            {
+                From = ID,
+                To = message.From,
+                Type = "RequestVoteResponse",
+                PayloadJson = JsonSerializer.Serialize(replyPayload)
+            };
+
+            _ = Send(replyMsg);
+        }
+
+        private void HandleRequestVoteResponse(Message message)
+        {
+            // If not a candidate, ignore the vote
+            if (Role != Roles.Candidate)
+            {
+                return;
+            }
+
+            JsonDocument doc = JsonDocument.Parse(message.PayloadJson);
+            int msgTerm = doc.RootElement.GetProperty("Term").GetInt32();
+            bool voteGranted = doc.RootElement.GetProperty("VoteGranted").GetBoolean();
+
+            if (msgTerm > CurrentTerm)
+            {
+                // Step down due to higher term
+                CurrentTerm = msgTerm;
+                Role = Roles.Follower;
+                VotedFor = null;
+                return;
+            }
+
+            if (voteGranted && msgTerm == CurrentTerm)
+            {
+                ++votesReceived;
+                // Check for majority
+                if (votesReceived > _peers.Count / 2.0)
+                {
+                    // Become leader
+                    Role = Roles.Leader;
+                    MessageDisplay = $"Elected Leader for Term {CurrentTerm}.";
+                    // Force an immediate heartbeat
+                    lastHeartbeatTime = 0;
+                }
+            }
         }
 
     }

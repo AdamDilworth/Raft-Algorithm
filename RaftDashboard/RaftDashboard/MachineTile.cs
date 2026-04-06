@@ -26,7 +26,12 @@ namespace RaftDashboard
 
         public void UpdateTime()
         {
-            lblTime.Text = $"Time: {(Math.Round((decimal)machine.Time, 2)).ToString()}";
+            lblTime.Text = $"Time: {Math.Round((decimal)machine.Time, 1)}";
+        }
+
+        public void UpdateMessage()
+        {
+            messageLbl.Text = $"Message: {machine.ShowMessage()}";
         }
 
         public void Start()
@@ -84,7 +89,7 @@ namespace RaftDashboard
                     }
                 }
             }
-                
+
         }
 
         private void btnViewMessage_Click(object sender, EventArgs e)

@@ -23,6 +23,7 @@ namespace RaftDashboard
             foreach (var tile in machineTiles)
             {
                 tile.UpdateTime();
+                tile.UpdateMessage();
             }
         }
 
