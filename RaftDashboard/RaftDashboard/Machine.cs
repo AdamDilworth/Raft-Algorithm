@@ -22,9 +22,9 @@ namespace RaftDashboard
 
         // Randomness
         private static readonly Random rng = new();
-        private readonly int minDelay = 150;
-        private readonly int maxDelay = 300;
-        private readonly double lossChance = 0.05;
+        public static int MinDelay { get; set; } = 150;
+        public static int MaxDelay { get; set; } = 300;
+        public static double LossChance { get; set; } = 0.05;
 
         // RAFT Leadership
         public enum Roles { Follower, Candidate, Leader }
@@ -75,8 +75,7 @@ namespace RaftDashboard
 
             LoadState();
 
-            // Random timeout between 1.5 and 3 seconds
-            electionTimeout = rng.Next(1500, 3000) / 1000.0;
+            RollElectionTimeout();
         }
 
         // Save a state to a JSON file
@@ -175,6 +174,7 @@ namespace RaftDashboard
             CurrentTerm = 0;
 
             LoadState();
+            RollElectionTimeout();
 
             MessageDisplay = "Crashed and rebooted from disk.";
         }
@@ -213,7 +213,9 @@ namespace RaftDashboard
                 else if (Role == Roles.Leader)
                 {
                     // Send hearbeat every 0.5 seconds
-                    if (Time - lastHeartbeatTime > 0.5)
+                    double heartbeatInterval = (Machine.MaxDelay * 1.5) / 1000.0;
+
+                    if (Time - lastHeartbeatTime > heartbeatInterval)
                     {
                         _ = SendAppendEntries();
                         lastHeartbeatTime = Time;
@@ -234,9 +236,9 @@ namespace RaftDashboard
             var target = _peers.First(p => p.ID == message.To);
 
             // Simulate delay
-            await Task.Delay(rng.Next(minDelay, maxDelay));
+            await Task.Delay(rng.Next(MinDelay, MaxDelay));
             // Simulate message loss
-            if (rng.NextDouble() < lossChance) return;
+            if (rng.NextDouble() < LossChance) return;
             // Then actually send
             await target.Inbox.Writer.WriteAsync(json);
         }
@@ -488,7 +490,7 @@ namespace RaftDashboard
 
             // Reset timer for new election phase
             lastHeartbeatTime = Time;
-            electionTimeout = rng.Next(1500, 3000) / 1000.0;
+            RollElectionTimeout();
 
             // Send RequestVote to everyone else
             foreach (var peer in _peers.Where(p => p.ID != this.ID))
@@ -641,6 +643,15 @@ namespace RaftDashboard
                     }
                 }
             }
+        }
+
+        private void RollElectionTimeout()
+        {
+            // Scale between 4x to 8x to follow RAFT constraints
+            int minTimeout = Machine.MaxDelay * 4;
+            int maxTimeout = Machine.MaxDelay * 8;
+
+            electionTimeout = rng.Next(minTimeout, maxTimeout) / 1000.0;
         }
 
     }

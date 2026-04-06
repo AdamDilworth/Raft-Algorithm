@@ -76,5 +76,15 @@ namespace RaftDashboard
                 if (num.Value > num.Maximum) num.Value = num.Maximum;
             }
         }
+
+        private void NetworkSettings_ValueChanged(object sender, EventArgs e)
+        {
+            if (numMinDelay.Value > numMaxDelay.Value) numMinDelay.Value = numMaxDelay.Value;
+
+            Machine.MinDelay = (int)numMinDelay.Value;
+            Machine.MaxDelay = (int)numMaxDelay.Value;
+
+            Machine.LossChance = (double)numLossChance.Value / 100.0;
+        }
     }
 }

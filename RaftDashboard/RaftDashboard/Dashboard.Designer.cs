@@ -33,9 +33,18 @@
             btnStart = new Button();
             lblMachines = new Label();
             pnlControl = new Panel();
+            numLossChance = new NumericUpDown();
+            label3 = new Label();
+            numMaxDelay = new NumericUpDown();
+            label2 = new Label();
+            numMinDelay = new NumericUpDown();
+            label1 = new Label();
             tlpDashboard = new TableLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)numMachines).BeginInit();
             pnlControl.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numLossChance).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numMaxDelay).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numMinDelay).BeginInit();
             tlpDashboard.SuspendLayout();
             SuspendLayout();
             // 
@@ -57,7 +66,7 @@
             numMachines.Maximum = new decimal(new int[] { 31, 0, 0, 0 });
             numMachines.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             numMachines.Name = "numMachines";
-            numMachines.Size = new Size(188, 31);
+            numMachines.Size = new Size(72, 31);
             numMachines.TabIndex = 5;
             numMachines.Value = new decimal(new int[] { 1, 0, 0, 0 });
             numMachines.ValueChanged += numMachines_ValueChanged;
@@ -65,7 +74,7 @@
             // btnStart
             // 
             btnStart.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnStart.Location = new Point(840, 35);
+            btnStart.Location = new Point(865, 32);
             btnStart.Margin = new Padding(4);
             btnStart.Name = "btnStart";
             btnStart.Size = new Size(118, 36);
@@ -86,6 +95,12 @@
             // 
             // pnlControl
             // 
+            pnlControl.Controls.Add(numLossChance);
+            pnlControl.Controls.Add(label3);
+            pnlControl.Controls.Add(numMaxDelay);
+            pnlControl.Controls.Add(label2);
+            pnlControl.Controls.Add(numMinDelay);
+            pnlControl.Controls.Add(label1);
             pnlControl.Controls.Add(lblMachines);
             pnlControl.Controls.Add(btnStart);
             pnlControl.Controls.Add(numMachines);
@@ -95,6 +110,65 @@
             pnlControl.Name = "pnlControl";
             pnlControl.Size = new Size(992, 92);
             pnlControl.TabIndex = 8;
+            // 
+            // numLossChance
+            // 
+            numLossChance.Location = new Point(779, 35);
+            numLossChance.Name = "numLossChance";
+            numLossChance.Size = new Size(72, 31);
+            numLossChance.TabIndex = 11;
+            numLossChance.Value = new decimal(new int[] { 5, 0, 0, 0 });
+            numLossChance.ValueChanged += NetworkSettings_ValueChanged;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(643, 37);
+            label3.Margin = new Padding(4, 0, 4, 0);
+            label3.Name = "label3";
+            label3.Size = new Size(129, 25);
+            label3.TabIndex = 10;
+            label3.Text = "Loss Chance %";
+            // 
+            // numMaxDelay
+            // 
+            numMaxDelay.Location = new Point(564, 35);
+            numMaxDelay.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            numMaxDelay.Name = "numMaxDelay";
+            numMaxDelay.Size = new Size(72, 31);
+            numMaxDelay.TabIndex = 9;
+            numMaxDelay.Value = new decimal(new int[] { 300, 0, 0, 0 });
+            numMaxDelay.ValueChanged += NetworkSettings_ValueChanged;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(463, 37);
+            label2.Margin = new Padding(4, 0, 4, 0);
+            label2.Name = "label2";
+            label2.Size = new Size(94, 25);
+            label2.TabIndex = 8;
+            label2.Text = "Max Delay";
+            // 
+            // numMinDelay
+            // 
+            numMinDelay.Location = new Point(384, 35);
+            numMinDelay.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            numMinDelay.Name = "numMinDelay";
+            numMinDelay.Size = new Size(72, 31);
+            numMinDelay.TabIndex = 7;
+            numMinDelay.Value = new decimal(new int[] { 150, 0, 0, 0 });
+            numMinDelay.ValueChanged += NetworkSettings_ValueChanged;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(286, 38);
+            label1.Margin = new Padding(4, 0, 4, 0);
+            label1.Name = "label1";
+            label1.Size = new Size(91, 25);
+            label1.TabIndex = 6;
+            label1.Text = "Min Delay";
             // 
             // tlpDashboard
             // 
@@ -125,6 +199,9 @@
             ((System.ComponentModel.ISupportInitialize)numMachines).EndInit();
             pnlControl.ResumeLayout(false);
             pnlControl.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numLossChance).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numMaxDelay).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numMinDelay).EndInit();
             tlpDashboard.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -136,5 +213,11 @@
         private Label lblMachines;
         private Panel pnlControl;
         private TableLayoutPanel tlpDashboard;
+        private Label label1;
+        private NumericUpDown numMinDelay;
+        private Label label2;
+        private NumericUpDown numMaxDelay;
+        private Label label3;
+        private NumericUpDown numLossChance;
     }
 }
