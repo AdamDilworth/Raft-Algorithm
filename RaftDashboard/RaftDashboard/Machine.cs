@@ -30,6 +30,8 @@ namespace RaftDashboard
         private int CommitIndex = 0; // Incremented after every commit
         private int LastApplied = 0; // 
         private int responseCount = 0; // Used for consensus
+        private double lastHeartbeatTime = 0;
+        private double electionTimeout;
 
         // Data for multithreaded and asynchronous behavior
         private CancellationTokenSource cts;
@@ -58,6 +60,8 @@ namespace RaftDashboard
             Time = 0;
             _peers = peers;
             Role = (id == 0 ? Roles.Leader : Roles.Follower); // Defaulting for the sake of doing log replication for now
+            // Random timeout between 1.5 and 3 seconds
+            electionTimeout = rng.Next(1500, 3000) / 1000.0;
         }
 
         // Start thread
@@ -106,7 +110,6 @@ namespace RaftDashboard
         {
             while (!token.IsCancellationRequested)
             {
-                //Debug.WriteLine("Thread: " + id + " Time: " + time);
                 if (Inbox.Reader.TryRead(out var json))
                 {
                     var message = JsonSerializer.Deserialize<Message>(json);
@@ -115,8 +118,16 @@ namespace RaftDashboard
                         Receive(message);
                     }
                 }
+
+                if (Role == Roles.Follower ||  Role == Roles.Candidate)
+                {
+                    if (Time - lastHeartbeatTime > electionTimeout)
+                    {
+                        StartElection();
+                    }
+                }
+
                 pauseEvent.Wait();
-                //Debug.WriteLine($"Machine {ID} Clock loop on thread {Thread.CurrentThread.ManagedThreadId}");
                 await Task.Delay(100);
                 Time += 0.1;
             }
@@ -204,8 +215,8 @@ namespace RaftDashboard
         // Followers respond to Leader's Entries
         public void HandleAppendEntries(Message message)
         {
-            // @TODO Have Followers approve entries
-            MessageDisplay = "Append Entries Case";
+            lastHeartbeatTime = Time;
+            MessageDisplay = "Received Heartbeat/Entries";
         }
 
         // Leader responds to followers replies
@@ -214,5 +225,19 @@ namespace RaftDashboard
             // @TODO Have Leader commit entries
             MessageDisplay = "Append Entries Replies Case";
         }
+
+        private void StartElection()
+        {
+            Role = Roles.Candidate;
+            ++CurrentTerm;
+            MessageDisplay = $"Started election for Term {CurrentTerm}.";
+
+            // Reset timer for new election phase
+            lastHeartbeatTime = Time;
+            electionTimeout = rng.Next(1500, 3000) / 1000.0;
+
+            // @TODO Send RequestVote message to peers
+        }
+
     }
 }
