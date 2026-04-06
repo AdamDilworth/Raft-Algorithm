@@ -68,7 +68,12 @@ namespace RaftDashboard
             Role = Roles.Follower;
 
             // Persistence
-            stateFilePath = $"Machine_{ID}_State.json";
+            string dataFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ClusterData");
+            if (!Directory.Exists(dataFolder))
+            {
+                Directory.CreateDirectory(dataFolder);
+            }
+            stateFilePath = Path.Combine(dataFolder, $"Machine_{ID}_State.json");
 
             _log.Clear();
             _log.Add(new LogEntry { Term = 0, Index = 0, Command = "INIT" });

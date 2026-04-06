@@ -68,7 +68,7 @@
             numMachines.Name = "numMachines";
             numMachines.Size = new Size(72, 31);
             numMachines.TabIndex = 5;
-            numMachines.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            numMachines.Value = new decimal(new int[] { 5, 0, 0, 0 });
             numMachines.ValueChanged += numMachines_ValueChanged;
             // 
             // btnStart

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace RaftDashboard
 {
     public partial class Dashboard : Form
@@ -32,7 +34,7 @@ namespace RaftDashboard
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            btnStart.Text = "Restart";
+            btnStart.Text = "Reset";
             int count = (int)numMachines.Value;
 
             // Stop existing machines
@@ -48,6 +50,26 @@ namespace RaftDashboard
             machines.Clear();
             machineTiles.Clear();
             flpMachineInfo.Controls.Clear();
+
+            string dataFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ClusterData");
+            if (Directory.Exists(dataFolder))
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    string filePath = Path.Combine(dataFolder, $"Machine_{i}_State.json");
+                    if (File.Exists(filePath))
+                    {
+                        try
+                        {
+                            File.Delete(filePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Could not delete old state file: {ex.Message}");
+                        }
+                    }
+                }
+            }
 
             for (int i = 0; i < count; i++)
             {
