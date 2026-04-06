@@ -13,6 +13,7 @@ namespace RaftDashboard
         public int From { get; set; }
         public int To { get; set; }
         public string Type { get; set; } = "";
-        public JsonElement Payload { get; set; }
+        // Use string for JSON so it breaks at compile time rather than runtime
+        public string PayloadJson { get; set; } = "";
     }
 }

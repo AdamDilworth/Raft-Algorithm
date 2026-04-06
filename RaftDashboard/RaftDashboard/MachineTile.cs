@@ -45,7 +45,7 @@ namespace RaftDashboard
 
         private void btnCrash_Click(object sender, EventArgs e)
         {
-            machine.Time = 0;
+            machine.Crash();
         }
 
         private void btnResume_Click(object sender, EventArgs e)
@@ -58,6 +58,7 @@ namespace RaftDashboard
             if (machine.Role == Machine.Roles.Leader)
             {
                 await machine.SendAppendEntries();
+                MessageBox.Show($"Machine {MachineID} (Leader) broadcasted AppendEntries.", "Broadcast Sent");
             }
             else
             {
@@ -76,7 +77,7 @@ namespace RaftDashboard
                             From = MachineID,
                             To = targetId,
                             Type = "Ping",
-                            Payload = JsonSerializer.SerializeToElement(payload)
+                            PayloadJson = JsonSerializer.Serialize(payload)
                         };
 
                         _ = machine.Send(msg);

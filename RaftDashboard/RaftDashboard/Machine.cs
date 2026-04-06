@@ -25,7 +25,7 @@ namespace RaftDashboard
 
         // RAFT Leadership
         public enum Roles { Follower, Candidate, Leader }
-        public Roles Role;
+        public Roles Role { get; private set; }
         private int CurrentTerm = 0; // This should increment after each election
         private int CommitIndex = 0; // Incremented after every commit
         private int LastApplied = 0; // 
@@ -41,11 +41,11 @@ namespace RaftDashboard
         private string MessageDisplay = "";
 
         // Log
-        internal List<LogEntry> Log {  get; } = [];
+        public IReadOnlyList<LogEntry> Log => _log.AsReadOnly();
+        private readonly List<LogEntry> _log = [];
 
         // Stopwatch and Event
-        public double Time { get; set; }
-        public event Action? OnTick;
+        public double Time { get; private set; }
 
         /* Methods */
 
@@ -95,6 +95,12 @@ namespace RaftDashboard
             pauseEvent.Set();
         }
 
+        // Crash
+        public void Crash()
+        {
+            Time = 0;
+        }
+
         // Increment clock every .1 second
         private async Task Clock(CancellationToken token)
         {
@@ -104,10 +110,12 @@ namespace RaftDashboard
                 if (Inbox.Reader.TryRead(out var json))
                 {
                     var message = JsonSerializer.Deserialize<Message>(json);
-                    Receive(message);
+                    if (message != null)
+                    {
+                        Receive(message);
+                    }
                 }
                 pauseEvent.Wait();
-                OnTick?.Invoke();
                 //Debug.WriteLine($"Machine {ID} Clock loop on thread {Thread.CurrentThread.ManagedThreadId}");
                 await Task.Delay(100);
                 Time += 0.1;
@@ -147,7 +155,8 @@ namespace RaftDashboard
 
                 case "Ping":
                     // Simple Message
-                    MessageDisplay = message.Payload.GetProperty("Text").GetString();
+                    JsonDocument doc = JsonDocument.Parse(message.PayloadJson);
+                    MessageDisplay = doc.RootElement.GetProperty("Text").GetString() ?? "Unknown";
                     break;
 
                 default:
@@ -185,7 +194,7 @@ namespace RaftDashboard
                     From = ID,
                     To = follower.ID,
                     Type = "AppendEntries",
-                    Payload = JsonSerializer.SerializeToElement(payload)
+                    PayloadJson = JsonSerializer.Serialize(payload)
                 };
 
                 await Send(msg);
@@ -193,14 +202,14 @@ namespace RaftDashboard
         }
 
         // Followers respond to Leader's Entries
-        public async void HandleAppendEntries(Message message)
+        public void HandleAppendEntries(Message message)
         {
             // @TODO Have Followers approve entries
             MessageDisplay = "Append Entries Case";
         }
 
         // Leader responds to followers replies
-        public async void HandleAppendReplies(Message message)
+        public void HandleAppendReplies(Message message)
         {
             // @TODO Have Leader commit entries
             MessageDisplay = "Append Entries Replies Case";

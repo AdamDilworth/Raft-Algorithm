@@ -39,27 +39,28 @@
             // 
             // lblMachineID
             // 
-            lblMachineID.AutoSize = true;
-            lblMachineID.Location = new Point(20, 17);
+            lblMachineID.Location = new Point(25, 21);
+            lblMachineID.Margin = new Padding(4, 0, 4, 0);
             lblMachineID.Name = "lblMachineID";
-            lblMachineID.Size = new Size(65, 20);
+            lblMachineID.Size = new Size(212, 31);
             lblMachineID.TabIndex = 0;
             lblMachineID.Text = "Machine";
             // 
             // lblTime
             // 
-            lblTime.AutoSize = true;
-            lblTime.Location = new Point(22, 50);
+            lblTime.Location = new Point(28, 62);
+            lblTime.Margin = new Padding(4, 0, 4, 0);
             lblTime.Name = "lblTime";
-            lblTime.Size = new Size(49, 20);
+            lblTime.Size = new Size(225, 31);
             lblTime.TabIndex = 1;
             lblTime.Text = "Time: ";
             // 
             // btnSendMessage
             // 
-            btnSendMessage.Location = new Point(22, 87);
+            btnSendMessage.Location = new Point(28, 109);
+            btnSendMessage.Margin = new Padding(4, 4, 4, 4);
             btnSendMessage.Name = "btnSendMessage";
-            btnSendMessage.Size = new Size(117, 29);
+            btnSendMessage.Size = new Size(146, 36);
             btnSendMessage.TabIndex = 2;
             btnSendMessage.Text = "Send Message";
             btnSendMessage.UseVisualStyleBackColor = true;
@@ -67,9 +68,10 @@
             // 
             // btnInterrupt
             // 
-            btnInterrupt.Location = new Point(400, 17);
+            btnInterrupt.Location = new Point(500, 21);
+            btnInterrupt.Margin = new Padding(4, 4, 4, 4);
             btnInterrupt.Name = "btnInterrupt";
-            btnInterrupt.Size = new Size(94, 29);
+            btnInterrupt.Size = new Size(118, 36);
             btnInterrupt.TabIndex = 3;
             btnInterrupt.Text = "Interrupt";
             btnInterrupt.UseVisualStyleBackColor = true;
@@ -77,9 +79,10 @@
             // 
             // btnCrash
             // 
-            btnCrash.Location = new Point(400, 52);
+            btnCrash.Location = new Point(500, 65);
+            btnCrash.Margin = new Padding(4, 4, 4, 4);
             btnCrash.Name = "btnCrash";
-            btnCrash.Size = new Size(94, 29);
+            btnCrash.Size = new Size(118, 36);
             btnCrash.TabIndex = 4;
             btnCrash.Text = "Crash";
             btnCrash.UseVisualStyleBackColor = true;
@@ -87,9 +90,10 @@
             // 
             // btnViewMessage
             // 
-            btnViewMessage.Location = new Point(145, 87);
+            btnViewMessage.Location = new Point(181, 109);
+            btnViewMessage.Margin = new Padding(4, 4, 4, 4);
             btnViewMessage.Name = "btnViewMessage";
-            btnViewMessage.Size = new Size(123, 29);
+            btnViewMessage.Size = new Size(154, 36);
             btnViewMessage.TabIndex = 5;
             btnViewMessage.Text = "View Message";
             btnViewMessage.UseVisualStyleBackColor = true;
@@ -97,9 +101,10 @@
             // 
             // btnResume
             // 
-            btnResume.Location = new Point(400, 87);
+            btnResume.Location = new Point(500, 109);
+            btnResume.Margin = new Padding(4, 4, 4, 4);
             btnResume.Name = "btnResume";
-            btnResume.Size = new Size(94, 29);
+            btnResume.Size = new Size(118, 36);
             btnResume.TabIndex = 6;
             btnResume.Text = "Resume";
             btnResume.UseVisualStyleBackColor = true;
@@ -107,7 +112,7 @@
             // 
             // MachineTile
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(btnResume);
             Controls.Add(btnViewMessage);
@@ -116,10 +121,10 @@
             Controls.Add(btnSendMessage);
             Controls.Add(lblTime);
             Controls.Add(lblMachineID);
+            Margin = new Padding(4, 4, 4, 4);
             Name = "MachineTile";
-            Size = new Size(515, 134);
+            Size = new Size(644, 168);
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
