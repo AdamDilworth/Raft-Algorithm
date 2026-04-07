@@ -103,5 +103,11 @@ namespace RaftDashboard
                 MessageBox.Show($"Machine {MachineID} is a Follower. Clients must redirect requests to the Leader.", "Redirect Required");
             }
         }
+
+        private void btnViewLog_Click(object sender, EventArgs e)
+        {
+            LogInspectorForm inspector = new LogInspectorForm(machine, MachineID);
+            inspector.Show();
+        }
     }
 }

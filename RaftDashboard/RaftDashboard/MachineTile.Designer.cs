@@ -37,6 +37,7 @@
             lblMessage = new Label();
             lblLogIndex = new Label();
             lblSharedStateX = new Label();
+            btnViewLog = new Button();
             SuspendLayout();
             // 
             // lblMachineID
@@ -60,7 +61,7 @@
             // 
             // btnSendMessage
             // 
-            btnSendMessage.Location = new Point(467, 154);
+            btnSendMessage.Location = new Point(465, 153);
             btnSendMessage.Margin = new Padding(4);
             btnSendMessage.Name = "btnSendMessage";
             btnSendMessage.Size = new Size(151, 36);
@@ -71,7 +72,7 @@
             // 
             // btnInterrupt
             // 
-            btnInterrupt.Location = new Point(467, 22);
+            btnInterrupt.Location = new Point(465, 21);
             btnInterrupt.Margin = new Padding(4);
             btnInterrupt.Name = "btnInterrupt";
             btnInterrupt.Size = new Size(151, 36);
@@ -82,7 +83,7 @@
             // 
             // btnCrash
             // 
-            btnCrash.Location = new Point(467, 66);
+            btnCrash.Location = new Point(465, 65);
             btnCrash.Margin = new Padding(4);
             btnCrash.Name = "btnCrash";
             btnCrash.Size = new Size(151, 36);
@@ -93,7 +94,7 @@
             // 
             // btnResume
             // 
-            btnResume.Location = new Point(467, 110);
+            btnResume.Location = new Point(465, 109);
             btnResume.Margin = new Padding(4);
             btnResume.Name = "btnResume";
             btnResume.Size = new Size(151, 36);
@@ -129,10 +130,21 @@
             lblSharedStateX.TabIndex = 9;
             lblSharedStateX.Text = "Shared State (X): ";
             // 
+            // btnViewLog
+            // 
+            btnViewLog.Location = new Point(465, 196);
+            btnViewLog.Name = "btnViewLog";
+            btnViewLog.Size = new Size(151, 36);
+            btnViewLog.TabIndex = 10;
+            btnViewLog.Text = "View Log";
+            btnViewLog.UseVisualStyleBackColor = true;
+            btnViewLog.Click += btnViewLog_Click;
+            // 
             // MachineTile
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(btnViewLog);
             Controls.Add(lblSharedStateX);
             Controls.Add(lblLogIndex);
             Controls.Add(lblMessage);
@@ -144,7 +156,7 @@
             Controls.Add(lblMachineID);
             Margin = new Padding(4);
             Name = "MachineTile";
-            Size = new Size(644, 212);
+            Size = new Size(644, 251);
             ResumeLayout(false);
         }
 
@@ -159,5 +171,6 @@
         private Label lblMessage;
         private Label lblLogIndex;
         private Label lblSharedStateX;
+        private Button btnViewLog;
     }
 }
