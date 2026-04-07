@@ -38,7 +38,7 @@ namespace RaftDashboard
         private int votesReceived = 0;
         private Dictionary<int, int> nextIndex = new(); // Tracks what the next log entry to send to that follower is
         private Dictionary<int, int> matchIndex = new(); // Tracks the highest log entry known to be replicated on that follower
-        public int SharedStateX { get; private set; } = 0;
+        public Dictionary<string, int> SharedState { get; private set; } = new(); // The shared state across the cluster
 
         // Data for multithreaded and asynchronous behavior
         private CancellationTokenSource cts;
@@ -168,7 +168,7 @@ namespace RaftDashboard
             Role = Roles.Follower;
             CommitIndex = 0;
             LastApplied = 0;
-            SharedStateX = 0;
+            SharedState.Clear();
             MessageDisplay = "Crashed.";
 
             // Clear out the inbox
@@ -634,17 +634,33 @@ namespace RaftDashboard
 
                 // Parse the command
                 string[] parts = command.Split(' ');
-                if (parts.Length == 3 && parts[1] == "X")
+                if (parts.Length == 3)
                 {
+                    string action = parts[0].ToUpper();
+                    string key = parts[1].ToUpper();
+
                     if (int.TryParse(parts[2], out int val))
                     {
-                        switch (parts[0])
+                        if (!SharedState.ContainsKey(key))
                         {
-                            case "SET": SharedStateX = val; break;
-                            case "ADD": SharedStateX += val; break;
-                            case "SUBTRACT": SharedStateX -= val; break;
-                            case "MULTIPLY": SharedStateX *= val; break;
+                            SharedState[key] = 0;
                         }
+
+                        switch (action)
+                        {
+                            case "SET": SharedState[key] = val; break;
+                            case "ADD": SharedState[key] += val; break;
+                            case "SUBTRACT": SharedState[key] -= val; break;
+                            case "MULTIPLY": SharedState[key] *= val; break;
+                        }
+                    }
+                }
+                else if (parts.Length == 2 && parts[0].ToUpper() == "DELETE")
+                {
+                    string key = parts[1].ToUpper();
+                    if (SharedState.ContainsKey(key))
+                    {
+                        SharedState.Remove(key);
                     }
                 }
             }

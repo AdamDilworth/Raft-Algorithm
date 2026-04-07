@@ -57,9 +57,16 @@ namespace RaftDashboard
             lblLogIndex.Text = $"Log Index: {machine.Log.Count - 1}";
         }
 
-        public void UpdateSharedStateX()
+        public void UpdateSharedState()
         {
-            lblSharedStateX.Text = $"Shared State (X): {machine.SharedStateX}";
+            if (machine.SharedState.Count == 0)
+            {
+                lblSharedState.Text = "State: [Empty]";
+                return;
+            }
+
+            var stateStrings = machine.SharedState.Select(kvp => $"{kvp.Key}: {kvp.Value}");
+            lblSharedState.Text = "State: " + string.Join(" | ", stateStrings);
         }
 
         public void Start()

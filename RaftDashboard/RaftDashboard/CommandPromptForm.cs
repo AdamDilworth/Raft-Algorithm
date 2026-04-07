@@ -26,7 +26,14 @@ namespace RaftDashboard
             this.AcceptButton = btnSubmit;
         }
 
-        public string CommandString => $"{cmbAction.SelectedItem} X {numValue.Value}";
+        public string CommandString
+        {
+            get
+            {
+                string varName = string.IsNullOrWhiteSpace(txtVariable.Text) ? "X" : txtVariable.Text.Trim();
+                return $"{cmbAction.SelectedItem} {varName} {numValue.Value}";
+            }
+        }
 
         private void CommandPromptForm_Load(object sender, EventArgs e)
         {

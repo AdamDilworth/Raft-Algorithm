@@ -36,7 +36,7 @@
             btnResume = new Button();
             lblMessage = new Label();
             lblLogIndex = new Label();
-            lblSharedStateX = new Label();
+            lblSharedState = new Label();
             btnViewLog = new Button();
             SuspendLayout();
             // 
@@ -121,14 +121,14 @@
             lblLogIndex.TabIndex = 8;
             lblLogIndex.Text = "Log Index: ";
             // 
-            // lblSharedStateX
+            // lblSharedState
             // 
-            lblSharedStateX.Location = new Point(25, 151);
-            lblSharedStateX.Margin = new Padding(4, 0, 4, 0);
-            lblSharedStateX.Name = "lblSharedStateX";
-            lblSharedStateX.Size = new Size(439, 31);
-            lblSharedStateX.TabIndex = 9;
-            lblSharedStateX.Text = "Shared State (X): ";
+            lblSharedState.Location = new Point(25, 151);
+            lblSharedState.Margin = new Padding(4, 0, 4, 0);
+            lblSharedState.Name = "lblSharedState";
+            lblSharedState.Size = new Size(439, 31);
+            lblSharedState.TabIndex = 9;
+            lblSharedState.Text = "Shared State: ";
             // 
             // btnViewLog
             // 
@@ -145,7 +145,7 @@
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(btnViewLog);
-            Controls.Add(lblSharedStateX);
+            Controls.Add(lblSharedState);
             Controls.Add(lblLogIndex);
             Controls.Add(lblMessage);
             Controls.Add(btnResume);
@@ -170,7 +170,7 @@
         private Button btnResume;
         private Label lblMessage;
         private Label lblLogIndex;
-        private Label lblSharedStateX;
+        private Label lblSharedState;
         private Button btnViewLog;
     }
 }

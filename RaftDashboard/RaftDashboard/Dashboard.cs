@@ -28,7 +28,7 @@ namespace RaftDashboard
                 tile.UpdateUptime();
                 tile.UpdateMessage();
                 tile.UpdateLogIndex();
-                tile.UpdateSharedStateX();
+                tile.UpdateSharedState();
             }
         }
 
