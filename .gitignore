@@ -1,7 +1,4 @@
 # ignore bin and obj
-RaftAlgorithm/bin
-RaftAlgorithm/obj
-
 RaftDashboard/.vs
 RaftDashboard/RaftDashboard/bin
 RaftDashboard/RaftDashboard/obj
