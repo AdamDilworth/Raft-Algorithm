@@ -1,1 +1,5 @@
 # Raft Algorithm
+A method to replicate logs across servers while accounting for node failures or data loss
+
+## Description
+This project simulates an implementation of the raft algorithm by utilizing the C# Task Parallel Library (TPL). Using the TPL allows for individual threads to be created and run simultaneously in order to simulate a group of servers on just one machine. Each thread acts as one machine which performs its own task and logging while communicating with the other machines to assure all machines retain the same state. Machine crashes, interruptions, and packet loss can be perfomed on any machine to simulate real world scenarios where machines no longer are in the same state.
