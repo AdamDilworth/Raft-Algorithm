@@ -13,10 +13,34 @@ This project simulates an implementation of the raft algorithm by utilizing the 
 * .NET9
 
 ## Usage
+### Opening
 - Download or clone project from git repository
 - Navigate in termimal from project root to inner RaftDashboard folder -> .\RaftDashboard\RaftDashboard
 - Enter command -> dotnet run
+### GUI
+#### Starting
 - GUI should open and display the following
 
 <img src="./img/defaultGUI.png" alt="defualt GUI" width="500"/>
 
+- Number of Machines, simulated delay, and loss settings can be modified before starting
+- *Note:* settings can also be changed while running but will only change when restart button is selected
+- Once started GUI will appear as follows
+
+<img src="./img/runningGUI.png" alt="defualt GUI" width="500"/>
+
+#### Running
+- Each machine has a set of buttons to its right that control that individual machine
+- The send button can be slected **on the leader** to set values across all machines
+
+<img src="./img/sendCommand.png" alt="defualt GUI" width="500"/>
+<img src="./img/sendOptions.png" alt="defualt GUI" width="500"/>
+
+- Users may change values, variables, and perform different actions
+- Once a value is set it will be distributed across machines
+
+<img src="./img/sendValueEX.png" alt="defualt GUI" width="500"/>
+
+- The View Log button can be use to see the history of messages sent between devices
+
+<img src="./img/machineLOG.png" alt="defualt GUI" width="500"/>
