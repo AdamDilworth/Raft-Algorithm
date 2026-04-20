@@ -13,3 +13,12 @@ This project simulates an implementation of the raft algorithm by utilizing the 
 * OS: Windows 
 * C# 
 * .NET9
+
+## Usage
+- Download or clone project from git repository
+- Navigate in termimal from project root to inner RaftDashboard folder -> .\RaftDashboard\RaftDashboard
+- Enter command -> dotnet run
+- GUI should open and display the following
+
+<img src="./img/defaultGUI.png" alt="defualt GUI" width="500"/>
+
