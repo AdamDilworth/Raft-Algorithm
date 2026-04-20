@@ -12,4 +12,4 @@ This project simulates an implementation of the raft algorithm by utilizing the 
 
 * OS: Windows 
 * C# 
-* .NET9 
+* .NET9
